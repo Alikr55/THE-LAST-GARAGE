@@ -68,6 +68,7 @@ window.UI = (function () {
     el('m-title').textContent = I18N.t('title');
     el('m-sub').textContent = I18N.t('sub');
     el('menu').classList.remove('hidden');
+    el('loading').classList.add('hidden');
     el('hud').classList.add('hidden');
     el('joy').classList.add('hidden');
     el('look-pad').classList.add('hidden');

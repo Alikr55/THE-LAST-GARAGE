@@ -7,37 +7,94 @@
 <title>THE LAST GARAGE — آخرین گاراژ</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b0d10'/><path d='M6 22 16 9l10 13v6H6z' fill='none' stroke='%23e8a33d' stroke-width='2.4'/></svg>">
-</head>
-<body>
-<canvas id="gl"></canvas>
-<noscript><div style="position:fixed;inset:0;background:#0b0d10;color:#e8a33d;display:flex;align-items:center;justify-content:center;z-index:9999">جاوااسکریپت غیرفعال است — بازی قابل اجرا نیست</div></noscript>
 <script>
-/* visible crash overlay — always first, inline, so any failure is reported on screen */
+/* ============ TLG boot guard — pure ES5, must run before everything ============ */
 (function () {
-  function show(msg) {
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+  /* ---- ES5 polyfills for old WebViews (chrome 37..47 range) ---- */
+  if (!window.Symbol) { window.Symbol = function (n) { return '@@' + (n || '') + Math.random(); }; window.Symbol.iterator = '@@iterator'; }
+  if (!Object.assign) { Object.assign = function (t) { for (var i = 1; i < arguments.length; i++) { var s = arguments[i]; if (s) for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) t[k] = s[k]; } return t; }; }
+  if (!Array.from) { Array.from = function (a) { var r = []; if (a == null) return r; var l = a.length >>> 0; for (var i = 0; i < l; i++) r.push(a[i]); return r; }; }
+  if (!Array.prototype.find) { Array.prototype.find = function (fn) { for (var i = 0; i < this.length; i++) if (fn(this[i], i, this)) return this[i]; return undefined; }; }
+  if (!Array.prototype.findIndex) { Array.prototype.findIndex = function (fn) { for (var i = 0; i < this.length; i++) if (fn(this[i], i, this)) return i; return -1; }; }
+  if (!Array.prototype.includes) { Array.prototype.includes = function (x) { return this.indexOf(x) !== -1; }; }
+  if (!String.prototype.startsWith) { String.prototype.startsWith = function (s) { return this.slice(0, s.length) === s; }; }
+  if (!String.prototype.endsWith) { String.prototype.endsWith = function (s) { return this.slice(-s.length) === s; }; }
+  if (!String.prototype.includes) { String.prototype.includes = function (s) { return this.indexOf(s) !== -1; }; }
+  if (!String.prototype.repeat) { String.prototype.repeat = function (n) { return new Array(n + 1).join(this); }; }
+  if (!Number.isInteger) { Number.isInteger = function (x) { return typeof x === 'number' && isFinite(x) && Math.floor(x) === x; }; }
+  if (!Number.isFinite) { Number.isFinite = function (x) { return typeof x === 'number' && isFinite(x); }; }
+  if (!Math.sign) { Math.sign = function (x) { x = +x; return x === 0 || x !== x ? x : x > 0 ? 1 : -1; }; }
+  if (!Math.trunc) { Math.trunc = function (x) { return x < 0 ? Math.ceil(x) : Math.floor(x); }; }
+
+  /* ---- fatal report screen (used by every handler below) ---- */
+  window.TLG_FATAL = function (msg) {
     try {
       var o = document.getElementById('tlg-err');
       if (!o) {
         o = document.createElement('div');
         o.id = 'tlg-err';
-        o.style.cssText = 'position:fixed;left:0;right:0;top:0;bottom:0;z-index:99999;background:rgba(8,10,12,.97);color:#ffb84d;font:13px/1.9 Tahoma,sans-serif;padding:24px 16px;overflow:auto;direction:rtl;text-align:center;';
-        o.innerHTML = '<div style="font-size:44px;margin-top:18vh">⚠️</div><b style="font-size:17px">خطا در اجرای بازی</b><br><span id="tlg-err-msg" style="color:#bbb;font-size:11.5px;direction:ltr;display:inline-block;max-width:92%;word-break:break-all"></span>';
+        o.style.cssText = 'position:fixed;left:0;right:0;top:0;bottom:0;z-index:99999;background:#0a0c0f;color:#ffb84d;font:13px/1.9 Tahoma,sans-serif;padding:20px 14px;overflow:auto;direction:rtl;text-align:center;';
+        o.innerHTML = '<div style="font-size:40px;margin-top:12vh">\u26A0</div>'
+          + '<b style="font-size:16px">\u062E\u0637\u0627 \u062F\u0631 \u0627\u062C\u0631\u0627\u06CC \u0628\u0627\u0632\u06CC</b><br>'
+          + '<span style="color:#888;font-size:11px">\u0627\u0632 \u0627\u06CC\u0646 \u0635\u0641\u062D\u0647 \u0639\u06A9\u0633 \u0628\u06AF\u06CC\u0631\u06CC\u062F \u0648 \u0628\u0641\u0631\u0633\u062A\u06CC\u062F</span>'
+          + '<div id="tlg-err-msg" style="color:#bbb;font-size:11.5px;direction:ltr;text-align:left;display:inline-block;max-width:94%;word-break:break-all;margin-top:10px"></div>'
+          + '<div id="tlg-err-meta" style="color:#666;font-size:10px;direction:ltr;text-align:left;margin-top:12px;word-break:break-all"></div>';
         document.body.appendChild(o);
+        var m = document.getElementById('tlg-err-meta');
+        if (m) m.textContent = 'WebView: ' + (navigator.userAgent.match(/Chrome\/[\d.]+/) || ['?'])[0]
+          + ' | ' + (navigator.userAgent.match(/Android [\d.]+/) || ['?'])[0];
       }
-      document.getElementById('tlg-err-msg').textContent += msg + '\n';
+      var box = document.getElementById('tlg-err-msg');
+      var t = box.textContent;
+      if (t.indexOf(String(msg).slice(0, 60)) !== -1) return;
+      box.textContent += (t ? '\n' : '') + msg;
     } catch (e) {}
-  }
-  window.TLG_FATAL = show;
+  };
+
+  /* ---- catch EVERY failure path ---- */
   window.addEventListener('error', function (e) {
     var f = e && e.filename ? String(e.filename).split('/').pop() : '';
-    show((e && e.message ? e.message : 'unknown error') + (f ? '  [' + f + ':' + (e.lineno || 0) + ']' : ''));
-  });
+    window.TLG_FATAL((e && e.message ? e.message : 'load/unknown error') + (f ? '  [' + f + ':' + (e.lineno || 0) + ']' : ''));
+  }, true); /* capture=true → also catches script-file load failures */
   window.addEventListener('unhandledrejection', function (e) {
     var r = e && e.reason;
-    show(String(r && (r.stack || r.message) ? (r.stack || r.message) : r));
+    window.TLG_FATAL('Promise: ' + String(r && (r.stack || r.message) ? (r.stack || r.message) : r));
   });
+
+  /* ---- per-script load markers ---- */
+  window.TLG_S = [];
+  window.TLG_MARK = function (el, ok) {
+    var n = String(el.src || '').split('/').pop();
+    window.TLG_S.push(n + (ok ? ' \u2713' : ' \u2717 \u0644\u0648\u062F \u0646\u0634\u062F'));
+  };
+
+  /* ---- capability precheck (before any game script) ---- */
+  window.addEventListener('DOMContentLoaded', function () {
+    var miss = [];
+    if (typeof Promise === 'undefined') miss.push('Promise');
+    if (typeof Map === 'undefined') miss.push('Map');
+    if (typeof Set === 'undefined') miss.push('Set');
+    if (!window.WebGLRenderingContext) miss.push('WebGL');
+    var meta = document.getElementById('load-meta');
+    if (meta) meta.textContent = ((navigator.userAgent.match(/Chrome\/[\d.]+/) || ['WebView ?'])[0])
+      + ' \u2022 ' + ((navigator.userAgent.match(/Android [\d.]+/) || ['Android ?'])[0]);
+    if (miss.length) window.TLG_FATAL('\u0645\u0631\u0648\u0631\u06AF\u0631 \u062F\u0627\u062E\u0644\u06CC \u06AF\u0648\u0634\u06CC \u0627\u06CC\u0646 \u0642\u0627\u0628\u0644\u06CC\u062A\u200C\u0647\u0627 \u0631\u0627 \u0646\u062F\u0627\u0631\u062F: ' + miss.join(', '));
+  });
+
+  /* ---- watchdog: if boot did not finish, print full diagnostic ---- */
+  window.setTimeout(function () {
+    if (!window.TLG_BOOTED) {
+      window.TLG_FATAL('\u0628\u0627\u0632\u06CC \u0634\u0631\u0648\u062F \u0646\u0634\u062F. \u0641\u0627\u06CC\u0644\u200C\u0647\u0627: ' + (window.TLG_S.join(' | ') || '\u0647\u06CC\u0686\u06CC'));
+    }
+  }, 7000);
 })();
 </script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<noscript><div style="position:fixed;left:0;right:0;top:0;bottom:0;background:#0b0d10;color:#e8a33d;display:flex;align-items:center;justify-content:center;z-index:9999">جاوااسکریپت غیرفعال است — بازی قابل اجرا نیست</div></noscript>
 
 <!-- splash / main menu -->
 <div id="menu" class="screen">
@@ -54,15 +111,16 @@
       <button class="btn" id="btn-about"></button>
       <button class="btn danger" id="btn-exit" hidden></button>
     </div>
-    <div class="m-foot" id="m-foot">v1.2.0 — داستان تعاملی ترسناک</div>
+    <div class="m-foot" id="m-foot">v1.2.1 — داستان تعاملی ترسناک</div>
   </div>
 </div>
 
-<!-- loading -->
-<div id="loading" class="screen">
+<!-- loading (hidden by default — showLoading()/hideLoading() manage it) -->
+<div id="loading" class="screen hidden">
   <div class="load-inner">
     <div class="load-bar"><i id="load-fill"></i></div>
     <div id="load-tip">در حال بارگذاری…</div>
+    <div id="load-meta" style="color:#556;font-size:10px;direction:ltr;margin-top:8px"></div>
   </div>
 </div>
 
@@ -87,17 +145,18 @@
   <div id="modal-card" role="dialog"></div>
 </div>
 
-<script src="js/three.min.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/audio.js"></script>
-<script src="js/save.js"></script>
-<script src="js/textures.js"></script>
-<script src="js/data_levels.js"></script>
-<script src="js/world.js"></script>
-<script src="js/player.js"></script>
-<script src="js/systems.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/levels.js"></script>
-<script src="js/main.js"></script>
+<script src="js/three.min.js"    onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/i18n.js"         onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/audio.js"        onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/save.js"         onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/textures.js"     onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/data_levels.js"  onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/world.js"        onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/player.js"       onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/systems.js"      onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/ui.js"           onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/levels.js"       onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script src="js/main.js"         onload="TLG_MARK(this,1)" onerror="TLG_MARK(this,0)"></script>
+<script>window.TLG_BOOTED = 1;</script>
 </body>
 </html>
