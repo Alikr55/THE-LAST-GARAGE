@@ -1,0 +1,47 @@
+plugins { id 'com.android.application' }
+
+def ksPropFile = rootProject.file('app/keystore.properties')
+def ksProps = new Properties()
+def hasKs = ksPropFile.exists()
+if (hasKs) ksProps.load(new FileInputStream(ksPropFile))
+
+android {
+    namespace 'com.zai.thelastgarage'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.zai.thelastgarage'
+        minSdk 24
+        targetSdk 34
+        versionCode 2
+        versionName '1.1.0'
+    }
+
+    if (hasKs) {
+        signingConfigs {
+            release {
+                storeFile file(ksProps['storeFile'])
+                storePassword ksProps['storePassword']
+                keyAlias ksProps['keyAlias']
+                keyPassword ksProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (hasKs) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
