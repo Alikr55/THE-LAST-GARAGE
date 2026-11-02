@@ -1,24 +1,28 @@
-/* THE LAST GARAGE — UI: modals, HUD, menus, all puzzle interfaces */
-window.UI = (function () {
+window.UI = (function() {
   var modalStack = [];
-  function el(id) { return document.getElementById(id); }
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-
+  function el(id) {
+    return document.getElementById(id);
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  }
   function bindClose(card) {
-    var x = card.querySelector('.m-x');
-    if (x) x.onclick = function () { closeModal(); };
+    var x = card.querySelector(".m-x");
+    if (x) x.onclick = function() {
+      closeModal();
+    };
   }
   function openModal(html) {
-    var root = el('modal-root'), card = el('modal-card');
+    var root = el("modal-root"), card = el("modal-card");
     modalStack.push(html);
     card.innerHTML = html;
-    root.classList.remove('hidden');
+    root.classList.remove("hidden");
     bindClose(card);
     return card;
   }
   function replaceModal(html) {
     if (!modalStack.length) return openModal(html);
-    var card = el('modal-card');
+    var card = el("modal-card");
     card.innerHTML = html;
     modalStack[modalStack.length - 1] = html;
     bindClose(card);
@@ -27,547 +31,621 @@ window.UI = (function () {
   function closeModal() {
     modalStack.pop();
     if (modalStack.length) {
-      var card = el('modal-card');
+      var card = el("modal-card");
       card.innerHTML = modalStack[modalStack.length - 1];
       bindClose(card);
     } else {
-      el('modal-root').classList.add('hidden');
-      el('modal-card').innerHTML = '';
+      el("modal-root").classList.add("hidden");
+      el("modal-card").innerHTML = "";
     }
   }
-  function closeAll() { modalStack.length = 0; el('modal-root').classList.add('hidden'); el('modal-card').innerHTML = ''; }
-  function modalOpen() { return !el('modal-root').classList.contains('hidden'); }
-
+  function closeAll() {
+    modalStack.length = 0;
+    el("modal-root").classList.add("hidden");
+    el("modal-card").innerHTML = "";
+  }
+  function modalOpen() {
+    return !el("modal-root").classList.contains("hidden");
+  }
   function toast(msg, ms) {
-    var t = el('toast');
-    t.innerHTML = '<div>' + esc(msg) + '</div>';
-    t.classList.remove('hidden');
+    var t = el("toast");
+    t.innerHTML = "<div>" + esc(msg) + "</div>";
+    t.classList.remove("hidden");
     clearTimeout(t._h);
-    t._h = setTimeout(function () { t.classList.add('hidden'); }, ms || 2400);
+    t._h = setTimeout(function() {
+      t.classList.add("hidden");
+    }, ms || 2400);
   }
-
   function head(title) {
-    return '<div class="m-title">' + esc(I18N.pick(title)) + '</div><button class="m-x">✕</button>';
+    return '<div class="m-title">' + esc(I18N.pick(title)) + '</div><button class="m-x">\u2715</button>';
   }
-
-  /* ---------------- HUD & menus ---------------- */
   function updateHUD(level) {
-    el('obj-level').textContent = I18N.t('chapter') + ' ' + I18N.faDigits(level.ch) + ' — ' + I18N.t('level') + ' ' + I18N.faDigits(level.id);
-    el('obj-text').textContent = I18N.pick(level.obj);
+    el("obj-level").textContent = I18N.t("chapter") + " " + I18N.faDigits(level.ch) + " \u2014 " + I18N.t("level") + " " + I18N.faDigits(level.id);
+    el("obj-text").textContent = I18N.pick(level.obj);
   }
-  function showHUD(v) { el('hud').classList.toggle('hidden', !v); el('joy').classList.toggle('hidden', !v); el('look-pad').classList.toggle('hidden', !v); }
+  function showHUD(v) {
+    el("hud").classList.toggle("hidden", !v);
+    el("joy").classList.toggle("hidden", !v);
+    el("look-pad").classList.toggle("hidden", !v);
+  }
   function showMenu() {
     var S = SaveSys.data;
-    el('btn-continue').hidden = !(S.has && SaveSys.has() && (S.cur || S.unlocked > 1));
-    el('btn-continue').textContent = '▶ ' + I18N.t('continue');
-    el('btn-new').textContent = '⟳ ' + I18N.t('newGame');
-    el('btn-chapters').textContent = '🗂 ' + I18N.t('chapters');
-    el('btn-settings').textContent = '⚙ ' + I18N.t('settings');
-    el('btn-about').textContent = 'ℹ ' + I18N.t('about');
-    el('btn-exit').hidden = !window.AndroidBridge;
-    el('m-title').textContent = I18N.t('title');
-    el('m-sub').textContent = I18N.t('sub');
-    el('menu').classList.remove('hidden');
-    el('hud').classList.add('hidden');
-    el('joy').classList.add('hidden');
-    el('look-pad').classList.add('hidden');
+    el("btn-continue").hidden = !(S.has && SaveSys.has() && (S.cur || S.unlocked > 1));
+    el("btn-continue").textContent = "\u25B6 " + I18N.t("continue");
+    el("btn-new").textContent = "\u27F3 " + I18N.t("newGame");
+    el("btn-chapters").textContent = "\u{1F5C2} " + I18N.t("chapters");
+    el("btn-settings").textContent = "\u2699 " + I18N.t("settings");
+    el("btn-about").textContent = "\u2139 " + I18N.t("about");
+    el("btn-exit").hidden = !window.AndroidBridge;
+    el("m-title").textContent = I18N.t("title");
+    el("m-sub").textContent = I18N.t("sub");
+    el("menu").classList.remove("hidden");
+    el("hud").classList.add("hidden");
+    el("joy").classList.add("hidden");
+    el("look-pad").classList.add("hidden");
   }
-  function hideMenu() { el('menu').classList.add('hidden'); }
-
+  function hideMenu() {
+    el("menu").classList.add("hidden");
+  }
   function showLoading(pct, tip) {
-    el('menu').classList.add('hidden');
-    el('loading').classList.remove('hidden');
-    el('load-fill').style.width = Math.round(pct * 100) + '%';
-    if (tip) el('load-tip').textContent = tip;
+    el("menu").classList.add("hidden");
+    el("loading").classList.remove("hidden");
+    el("load-fill").style.width = Math.round(pct * 100) + "%";
+    if (tip) el("load-tip").textContent = tip;
   }
-  function hideLoading() { el('loading').classList.add('hidden'); }
-
+  function hideLoading() {
+    el("loading").classList.add("hidden");
+  }
   function pauseMenu() {
     openModal(
-      head(I18N.t('pause')) +
-      '<div class="m-body">' +
-      '<button class="btn primary" id="pm-resume">▶ ' + I18N.t('resume') + '</button>' +
-      '<button class="btn" id="pm-settings" style="margin-top:10px">⚙ ' + I18N.t('settings') + '</button>' +
-      '<button class="btn" id="pm-restart" style="margin-top:10px">⟳ ' + I18N.t('restart') + '</button>' +
-      '<button class="btn danger" id="pm-menu" style="margin-top:10px">⌂ ' + I18N.t('mainMenu') + '</button>' +
-      '</div>');
-    el('pm-resume').onclick = function () { closeModal(); };
-    el('pm-settings').onclick = function () { settingsModal(); };
-    el('pm-restart').onclick = function () { closeModal(); Levels.restartLevel(); };
-    el('pm-menu').onclick = function () { closeModal(); Main.toMenu(); };
+      head(I18N.t("pause")) + '<div class="m-body"><button class="btn primary" id="pm-resume">\u25B6 ' + I18N.t("resume") + '</button><button class="btn" id="pm-settings" style="margin-top:10px">\u2699 ' + I18N.t("settings") + '</button><button class="btn" id="pm-restart" style="margin-top:10px">\u27F3 ' + I18N.t("restart") + '</button><button class="btn danger" id="pm-menu" style="margin-top:10px">\u2302 ' + I18N.t("mainMenu") + "</button></div>"
+    );
+    el("pm-resume").onclick = function() {
+      closeModal();
+    };
+    el("pm-settings").onclick = function() {
+      settingsModal();
+    };
+    el("pm-restart").onclick = function() {
+      closeModal();
+      Levels.restartLevel();
+    };
+    el("pm-menu").onclick = function() {
+      closeModal();
+      Main.toMenu();
+    };
   }
-
   function settingsModal(fromPause) {
     var S = SaveSys.data.settings;
-    var seg = function (k, vals, labels) {
-      return '<div class="seg" data-k="' + k + '">' + vals.map(function (v, i) {
-        return '<button data-v="' + v + '" class="' + (S[k] === v ? 'on' : '') + '">' + labels[i] + '</button>';
-      }).join('') + '</div>';
+    var seg = function(k, vals, labels) {
+      return '<div class="seg" data-k="' + k + '">' + vals.map(function(v, i) {
+        return '<button data-v="' + v + '" class="' + (S[k] === v ? "on" : "") + '">' + labels[i] + "</button>";
+      }).join("") + "</div>";
     };
     replaceModal(
-      head(I18N.t('settings')) +
-      '<div class="m-body">' +
-      '<div class="set-row"><label>' + I18N.t('quality') + '</label>' + seg('quality', ['low', 'med', 'high'], [I18N.t('low'), I18N.t('med'), I18N.t('high')]) + '</div>' +
-      '<div class="set-row"><label>' + I18N.t('volume') + ' — <span id="v-music">' + Math.round(S.volMusic * 100) + '%</span></label><input type="range" id="r-music" min="0" max="100" value="' + S.volMusic * 100 + '"></div>' +
-      '<div class="set-row"><label>' + I18N.t('sfxVol') + ' — <span id="v-sfx">' + Math.round(S.volSfx * 100) + '%</span></label><input type="range" id="r-sfx" min="0" max="100" value="' + S.volSfx * 100 + '"></div>' +
-      '<div class="set-row"><label>' + I18N.t('sens') + ' — <span id="v-sens">' + S.sens.toFixed(1) + '</span></label><input type="range" id="r-sens" min="4" max="20" value="' + S.sens * 10 + '"></div>' +
-      '<div class="set-row"><label>' + I18N.t('vibrate') + '</label>' + seg('vibrate', [true, false], [I18N.t('on'), I18N.t('off')]) + '</div>' +
-      '<div class="set-row"><label>' + I18N.t('lang') + '</label>' + seg('lang', ['fa', 'en'], ['فارسی', 'English']) + '</div>' +
-      '<button class="btn danger" id="set-del" style="margin-top:8px">🗑 ' + I18N.t('deleteSave') + '</button>' +
-      '</div>');
-    el('modal-card').querySelectorAll('.seg').forEach(function (sg) {
-      sg.querySelectorAll('button').forEach(function (b) {
-        b.onclick = function () {
+      head(I18N.t("settings")) + '<div class="m-body"><div class="set-row"><label>' + I18N.t("quality") + "</label>" + seg("quality", ["low", "med", "high"], [I18N.t("low"), I18N.t("med"), I18N.t("high")]) + '</div><div class="set-row"><label>' + I18N.t("volume") + ' \u2014 <span id="v-music">' + Math.round(S.volMusic * 100) + '%</span></label><input type="range" id="r-music" min="0" max="100" value="' + S.volMusic * 100 + '"></div><div class="set-row"><label>' + I18N.t("sfxVol") + ' \u2014 <span id="v-sfx">' + Math.round(S.volSfx * 100) + '%</span></label><input type="range" id="r-sfx" min="0" max="100" value="' + S.volSfx * 100 + '"></div><div class="set-row"><label>' + I18N.t("sens") + ' \u2014 <span id="v-sens">' + S.sens.toFixed(1) + '</span></label><input type="range" id="r-sens" min="4" max="20" value="' + S.sens * 10 + '"></div><div class="set-row"><label>' + I18N.t("vibrate") + "</label>" + seg("vibrate", [true, false], [I18N.t("on"), I18N.t("off")]) + '</div><div class="set-row"><label>' + I18N.t("lang") + "</label>" + seg("lang", ["fa", "en"], ["\u0641\u0627\u0631\u0633\u06CC", "English"]) + '</div><button class="btn danger" id="set-del" style="margin-top:8px">\u{1F5D1} ' + I18N.t("deleteSave") + "</button></div>"
+    );
+    el("modal-card").querySelectorAll(".seg").forEach(function(sg) {
+      sg.querySelectorAll("button").forEach(function(b) {
+        b.onclick = function() {
           var k = sg.dataset.k, v = b.dataset.v;
-          S[k] = (v === 'true') ? true : (v === 'false') ? false : v;
-          sg.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
-          b.classList.add('on');
+          S[k] = v === "true" ? true : v === "false" ? false : v;
+          sg.querySelectorAll("button").forEach(function(x) {
+            x.classList.remove("on");
+          });
+          b.classList.add("on");
           SaveSys.commit();
           applySettingsLive();
         };
       });
     });
-    [['r-music', 'volMusic', 'v-music'], ['r-sfx', 'volSfx', 'v-sfx'], ['r-sens', 'sens', 'v-sens']].forEach(function (r) {
+    [["r-music", "volMusic", "v-music"], ["r-sfx", "volSfx", "v-sfx"], ["r-sens", "sens", "v-sens"]].forEach(function(r) {
       var inp = el(r[0]);
-      if (inp) inp.oninput = function () {
+      if (inp) inp.oninput = function() {
         var v = +inp.value;
-        if (r[1] === 'sens') { S.sens = v / 10; el(r[2]).textContent = S.sens.toFixed(1); }
-        else { S[r[1]] = v / 100; el(r[2]).textContent = v + '%'; }
+        if (r[1] === "sens") {
+          S.sens = v / 10;
+          el(r[2]).textContent = S.sens.toFixed(1);
+        } else {
+          S[r[1]] = v / 100;
+          el(r[2]).textContent = v + "%";
+        }
         SaveSys.commit();
         applySettingsLive();
       };
     });
-    var del = el('set-del');
-    if (del) del.onclick = function () {
-      openModal(head(I18N.t('confirmDel')) +
-        '<div class="m-body"><div class="m-actions"><button class="btn danger" id="del-yes">' + I18N.t('yes') + '</button>' +
-        '<button class="btn" id="del-no">' + I18N.t('no') + '</button></div></div>');
-      el('del-yes').onclick = function () { SaveSys.reset(); closeAll(); Main.toMenu(); };
-      el('del-no').onclick = function () { closeModal(); settingsModal(fromPause); };
+    var del = el("set-del");
+    if (del) del.onclick = function() {
+      openModal(head(I18N.t("confirmDel")) + '<div class="m-body"><div class="m-actions"><button class="btn danger" id="del-yes">' + I18N.t("yes") + '</button><button class="btn" id="del-no">' + I18N.t("no") + "</button></div></div>");
+      el("del-yes").onclick = function() {
+        SaveSys.reset();
+        closeAll();
+        Main.toMenu();
+      };
+      el("del-no").onclick = function() {
+        closeModal();
+        settingsModal(fromPause);
+      };
     };
   }
   function applySettingsLive() {
     var S = SaveSys.data.settings;
-    AudioSys.setMusic(S.volMusic); AudioSys.setSfx(S.volSfx);
+    AudioSys.setMusic(S.volMusic);
+    AudioSys.setSfx(S.volSfx);
+    if (window.Music) Music.setVol(S.volMusic);
     I18N.setLang(S.lang);
     W.applyQuality(S.quality);
     Player.applySettings(S);
     if (!modalOpen() && window.Levels && Levels.current) updateHUD(Levels.current);
   }
-
   function chaptersModal() {
     var S = SaveSys.data;
     var CH = window.Chapters;
-    var cards = CH.list.map(function (c) {
+    var cards = CH.list.map(function(c) {
       var unlocked = S.unlocked >= c.first;
-      var done = S.completed[c.last] || (S.unlocked > c.last);
-      return '<div class="ch-card ' + (unlocked ? 'on' : 'locked') + '" data-ch="' + c.id + '">' +
-        '<b>' + I18N.t('chapter') + ' ' + I18N.faDigits(c.id) + '</b>' +
-        '<h4>' + esc(I18N.pick(c.title)) + '</h4>' +
-        '<small>' + I18N.faDigits(c.first) + '–' + I18N.faDigits(c.last) + '</small> ' +
-        (done ? '<span class="badge">' + I18N.t('done') + '</span>' : (unlocked ? '' : '<span class="badge">' + I18N.t('soon') + '</span>')) +
-        '</div>';
-    }).join('');
-    openModal(head(I18N.t('chapters')) + '<div class="ch-grid">' + cards + '</div>');
-    el('modal-card').querySelectorAll('.ch-card').forEach(function (card) {
-      card.onclick = function () {
+      var done = S.completed[c.last] || S.unlocked > c.last;
+      return '<div class="ch-card ' + (unlocked ? "on" : "locked") + '" data-ch="' + c.id + '"><b>' + I18N.t("chapter") + " " + I18N.faDigits(c.id) + "</b><h4>" + esc(I18N.pick(c.title)) + "</h4><small>" + I18N.faDigits(c.first) + "\u2013" + I18N.faDigits(c.last) + "</small> " + (done ? '<span class="badge">' + I18N.t("done") + "</span>" : unlocked ? "" : '<span class="badge">' + I18N.t("soon") + "</span>") + "</div>";
+    }).join("");
+    openModal(head(I18N.t("chapters")) + '<div class="ch-grid">' + cards + "</div>");
+    el("modal-card").querySelectorAll(".ch-card").forEach(function(card) {
+      card.onclick = function() {
         var cid = +card.dataset.ch;
         var c = CH.list[cid - 1];
-        if (SaveSys.data.unlocked < c.first) { AudioSys.SFX.locked(); toast(I18N.t('chLock')); return; }
+        if (SaveSys.data.unlocked < c.first) {
+          AudioSys.SFX.locked();
+          toast(I18N.t("chLock"));
+          return;
+        }
         closeModal();
         var target = c.first;
-        for (var i = c.first; i <= c.last; i++) { if (!SaveSys.data.completed[i]) { target = i; break; } if (i === c.last) target = c.last; }
+        for (var i = c.first; i <= c.last; i++) {
+          if (!SaveSys.data.completed[i]) {
+            target = i;
+            break;
+          }
+          if (i === c.last) target = c.last;
+        }
         Main.startGame(target);
       };
     });
   }
-
   function aboutModal() {
-    openModal(head(I18N.t('about')) +
-      '<div class="m-body">' + esc(I18N.t('aboutText')) +
-      '<p class="tiny" style="margin-top:10px">Three.js r147 · Vazirmatn · WebAudio · MIT © 2026</p></div>');
+    openModal(head(I18N.t("about")) + '<div class="m-body">' + esc(I18N.t("aboutText")) + '<p class="tiny" style="margin-top:10px">Three.js r147 \xB7 Vazirmatn \xB7 WebAudio \xB7 MIT \xA9 2026</p></div>');
   }
-
-  /* ---------------- inventory ---------------- */
   function bagModal() {
     var S = SaveSys.data;
-    var slots = '';
+    var slots = "";
     for (var i = 0; i < 12; i++) {
       var it = S.items[i];
-      slots += '<div class="inv-slot ' + (it ? 'filled' : '') + '" data-id="' + (it ? it.id : '') + '">' + (it ? it.icon : '') + '</div>';
+      slots += '<div class="inv-slot ' + (it ? "filled" : "") + '" data-id="' + (it ? it.id : "") + '">' + (it ? it.icon : "") + "</div>";
     }
-    openModal(head(I18N.t('bag')) + '<div class="inv-grid">' + slots + '</div>' +
-      '<div class="toc">' + I18N.faDigits(S.items.length) + ' / 12</div>');
-    el('modal-card').querySelectorAll('.inv-slot.filled').forEach(function (s) {
-      s.onclick = function () {
-        var it = S.items.filter(function (x) { return x.id === s.dataset.id; })[0];
-        if (!it) return;
-        replaceModal(head(it.name) +
-          '<div class="item-view"><canvas id="item-canvas"></canvas>' +
-          '<div class="m-body">' + esc(I18N.pick(it.name)) + '<br><span class="tiny">' + I18N.t('level') + ' ' + I18N.faDigits(it.level || 0) + '</span></div></div>');
-        var cv = el('item-canvas');
-        var stop = Systems.showItemPreview(cv, it.icon);
-        var backBtn = el('modal-card').querySelector('.m-x');
+    openModal(head(I18N.t("bag")) + '<div class="inv-grid">' + slots + '</div><div class="toc">' + I18N.faDigits(S.items.length) + " / 12</div>");
+    el("modal-card").querySelectorAll(".inv-slot.filled").forEach(function(s) {
+      s.onclick = function() {
+        var it2 = S.items.filter(function(x) {
+          return x.id === s.dataset.id;
+        })[0];
+        if (!it2) return;
+        replaceModal(head(it2.name) + '<div class="item-view"><canvas id="item-canvas"></canvas><div class="m-body">' + esc(I18N.pick(it2.name)) + '<br><span class="tiny">' + I18N.t("level") + " " + I18N.faDigits(it2.level || 0) + "</span></div></div>");
+        var cv = el("item-canvas");
+        var stop = Systems.showItemPreview(cv, it2.icon);
+        var backBtn = el("modal-card").querySelector(".m-x");
         var oldClose = backBtn.onclick;
-        backBtn.onclick = function () { stop(); closeModal(); };
+        backBtn.onclick = function() {
+          stop();
+          closeModal();
+        };
       };
     });
   }
-
-  /* ---------------- journal ---------------- */
-  var jTab = 'objectives';
+  var jTab = "objectives";
   function journalModal(tab) {
     jTab = tab || jTab;
     var S = SaveSys.data;
     var CH = window.Chapters;
-    var tabs = [['objectives', I18N.t('objectives')], ['notes', I18N.t('notes')], ['items', I18N.t('items')], ['achs', I18N.t('achs')], ['endings', I18N.t('endings')]];
-    var body = '<div class="j-tabs">' + tabs.map(function (t) {
-      return '<button data-t="' + t[0] + '" class="' + (jTab === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
-    }).join('') + '</div>';
-    if (jTab === 'objectives') {
+    var tabs = [["objectives", I18N.t("objectives")], ["notes", I18N.t("notes")], ["items", I18N.t("items")], ["achs", I18N.t("achs")], ["endings", I18N.t("endings")]];
+    var body = '<div class="j-tabs">' + tabs.map(function(t) {
+      return '<button data-t="' + t[0] + '" class="' + (jTab === t[0] ? "on" : "") + '">' + t[1] + "</button>";
+    }).join("") + "</div>";
+    if (jTab === "objectives") {
       body += '<div class="m-body">';
-      CH.list.forEach(function (c) {
+      CH.list.forEach(function(c) {
         if (S.unlocked < c.first) return;
-        body += '<div class="j-item"><b>' + I18N.t('chapter') + ' ' + I18N.faDigits(c.id) + ' — ' + esc(I18N.pick(c.title)) + '</b>';
+        body += '<div class="j-item"><b>' + I18N.t("chapter") + " " + I18N.faDigits(c.id) + " \u2014 " + esc(I18N.pick(c.title)) + "</b>";
         for (var i = c.first; i <= c.last; i++) {
           var lv = window.Levels.get(i);
           if (!lv) continue;
           var ok = S.completed[i];
           var unlocked = S.unlocked >= i;
-          body += '<p>' + (ok ? '✅ ' : (unlocked ? '🎯 ' : '🔒 ')) + I18N.faDigits(i) + '. ' + esc(I18N.pick(lv.title)) +
-            (unlocked ? ' — <span class="tiny">' + esc(I18N.pick(lv.obj)) + '</span>' : '') + '</p>';
+          body += "<p>" + (ok ? "\u2705 " : unlocked ? "\u{1F3AF} " : "\u{1F512} ") + I18N.faDigits(i) + ". " + esc(I18N.pick(lv.title)) + (unlocked ? ' \u2014 <span class="tiny">' + esc(I18N.pick(lv.obj)) + "</span>" : "") + "</p>";
         }
-        body += '</div>';
+        body += "</div>";
       });
-      body += '</div>';
-    } else if (jTab === 'notes') {
-      body += S.notes.length ? S.notes.slice().reverse().map(function (n) {
-        return '<div class="j-item"><b>' + I18N.t('level') + ' ' + I18N.faDigits(n.level || 0) + '</b><p>' + esc(I18N.pick(n.text)) + '</p></div>';
-      }).join('') : '<div class="m-body dim">' + I18N.t('noNotes') + '</div>';
-    } else if (jTab === 'items') {
-      body += S.items.length ? '<div class="inv-grid">' + S.items.map(function (it) {
-        return '<div class="inv-slot filled">' + it.icon + '</div>';
-      }).join('') + '</div>' : '<div class="m-body dim">' + I18N.t('noItems') + '</div>';
-    } else if (jTab === 'achs') {
-      body += SaveSys.ACH.map(function (a) {
+      body += "</div>";
+    } else if (jTab === "notes") {
+      body += S.notes.length ? S.notes.slice().reverse().map(function(n) {
+        return '<div class="j-item"><b>' + I18N.t("level") + " " + I18N.faDigits(n.level || 0) + "</b><p>" + esc(I18N.pick(n.text)) + "</p></div>";
+      }).join("") : '<div class="m-body dim">' + I18N.t("noNotes") + "</div>";
+    } else if (jTab === "items") {
+      body += S.items.length ? '<div class="inv-grid">' + S.items.map(function(it) {
+        return '<div class="inv-slot filled">' + it.icon + "</div>";
+      }).join("") + "</div>" : '<div class="m-body dim">' + I18N.t("noItems") + "</div>";
+    } else if (jTab === "achs") {
+      body += SaveSys.ACH.map(function(a) {
         var got = S.achievements[a.id];
-        return '<div class="j-item ach ' + (got ? 'got' : 'locked') + '"><span class="ic">' + a.icon + '</span><div><b>' +
-          esc(I18N.pick({ fa: a.fa, en: a.en })) + '</b><p>' + esc(I18N.pick({ fa: a.desc_fa, en: a.desc_en })) + '</p></div></div>';
-      }).join('');
-    } else if (jTab === 'endings') {
+        return '<div class="j-item ach ' + (got ? "got" : "locked") + '"><span class="ic">' + a.icon + "</span><div><b>" + esc(I18N.pick({ fa: a.fa, en: a.en })) + "</b><p>" + esc(I18N.pick({ fa: a.desc_fa, en: a.desc_en })) + "</p></div></div>";
+      }).join("");
+    } else if (jTab === "endings") {
       var E = window.Endings.list;
-      body += E.map(function (e) {
+      body += E.map(function(e) {
         var got = S.endings[e.id];
-        return '<div class="j-item ' + (got ? '' : 'locked') + '"><b>' + esc(got ? I18N.pick(e.title) : '؟؟؟') + '</b><p>' +
-          esc(got ? I18N.pick(e.desc) : I18N.t('endingsLocked')) + '</p></div>';
-      }).join('');
+        return '<div class="j-item ' + (got ? "" : "locked") + '"><b>' + esc(got ? I18N.pick(e.title) : "\u061F\u061F\u061F") + "</b><p>" + esc(got ? I18N.pick(e.desc) : I18N.t("endingsLocked")) + "</p></div>";
+      }).join("");
     }
-    replaceModal(head(I18N.t('journal')) + body);
-    el('modal-card').querySelectorAll('.j-tabs button').forEach(function (b) {
-      b.onclick = function () { journalModal(b.dataset.t); };
+    replaceModal(head(I18N.t("journal")) + body);
+    el("modal-card").querySelectorAll(".j-tabs button").forEach(function(b) {
+      b.onclick = function() {
+        journalModal(b.dataset.t);
+      };
     });
   }
-
   function hintModal(level) {
-    SaveSys.data.stats.hints++; SaveSys.commit();
-    openModal(head(I18N.t('hintTitle')) +
-      '<div class="hint-box">💡 ' + esc(I18N.pick(level.hint)) + '</div>' +
-      '<p class="tiny" style="margin-top:8px">' + I18N.t('hintCost') + '</p>');
+    SaveSys.data.stats.hints++;
+    SaveSys.commit();
+    openModal(head(I18N.t("hintTitle")) + '<div class="hint-box">\u{1F4A1} ' + esc(I18N.pick(level.hint)) + '</div><p class="tiny" style="margin-top:8px">' + I18N.t("hintCost") + "</p>");
   }
-
-  /* ---------------- generic overlays ---------------- */
   function paperModal(title, text, onClose, sig) {
-    openModal(head(title) +
-      '<div class="paper">' + esc(I18N.pick(text)).replace(/\n/g, '<br>') + (sig ? '<div class="sig">' + esc(sig) + '</div>' : '') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="pp-ok">' + I18N.t('close') + '</button></div>');
-    el('pp-ok').onclick = function () { closeModal(); if (onClose) onClose(); };
+    openModal(head(title) + '<div class="paper">' + esc(I18N.pick(text)).replace(/\n/g, "<br>") + (sig ? '<div class="sig">' + esc(sig) + "</div>" : "") + '</div><div class="m-actions"><button class="btn primary" id="pp-ok">' + I18N.t("close") + "</button></div>");
+    el("pp-ok").onclick = function() {
+      closeModal();
+      if (onClose) onClose();
+    };
   }
-
   function choiceModal(level, spec, onPick) {
-    openModal(head(I18N.t('choiceTitle')) +
-      '<div class="m-body">' + esc(I18N.pick(spec.prompt)) + '</div>' +
-      '<div style="margin-top:10px">' +
-      spec.options.map(function (o, i) {
-        return '<button class="choice-btn" data-i="' + i + '">' + esc(I18N.pick(o.label)) + '</button>';
-      }).join('') + '</div>');
-    el('modal-card').querySelectorAll('.choice-btn').forEach(function (b) {
-      b.onclick = function () { closeModal(); onPick(spec.options[+b.dataset.i]); };
+    openModal(head(I18N.t("choiceTitle")) + '<div class="m-body">' + esc(I18N.pick(spec.prompt)) + '</div><div style="margin-top:10px">' + spec.options.map(function(o, i) {
+      return '<button class="choice-btn" data-i="' + i + '">' + esc(I18N.pick(o.label)) + "</button>";
+    }).join("") + "</div>");
+    el("modal-card").querySelectorAll(".choice-btn").forEach(function(b) {
+      b.onclick = function() {
+        closeModal();
+        onPick(spec.options[+b.dataset.i]);
+      };
     });
   }
-
   function levelCompleteModal(level, outro, onNext) {
     var S = SaveSys.data;
     var isLast = level.id >= 100;
-    openModal(head(I18N.t('stepDone')) +
-      '<div class="m-body">' + esc(I18N.pick(outro)) + '</div>' +
-      '<div class="m-actions">' +
-      (isLast ? '' : '<button class="btn primary" id="lc-next">' + I18N.t('nextLv') + ' →</button>') +
-      '<button class="btn" id="lc-menu">⌂ ' + I18N.t('menuLv') + '</button></div>');
-    var n = el('lc-next');
-    if (n) n.onclick = function () { closeModal(); onNext(); };
-    el('lc-menu').onclick = function () { closeModal(); Main.toMenu(); };
+    openModal(head(I18N.t("stepDone")) + '<div class="m-body">' + esc(I18N.pick(outro)) + '</div><div class="m-actions">' + (isLast ? "" : '<button class="btn primary" id="lc-next">' + I18N.t("nextLv") + " \u2192</button>") + '<button class="btn" id="lc-menu">\u2302 ' + I18N.t("menuLv") + "</button></div>");
+    var n = el("lc-next");
+    if (n) n.onclick = function() {
+      closeModal();
+      onNext();
+    };
+    el("lc-menu").onclick = function() {
+      closeModal();
+      Main.toMenu();
+    };
   }
-
   function endingModal(ending, onDone) {
     var S = SaveSys.data;
-    S.endings[ending.id] = true; SaveSys.commit();
-    Systems.grant('finisher');
+    S.endings[ending.id] = true;
+    SaveSys.commit();
+    Systems.grant("finisher");
     AudioSys.SFX.complete();
-    openModal(head(I18N.t('endings')) +
-      '<div class="end-title">' + esc(I18N.pick(ending.title)) + '</div>' +
-      '<div class="m-body">' + esc(I18N.pick(ending.text)).replace(/\n/g, '<br>') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="end-ok">⌂ ' + I18N.t('mainMenu') + '</button></div>');
-    el('end-ok').onclick = function () { closeModal(); if (onDone) onDone(); Main.toMenu(); };
+    if (window.Music) Music.play(ending.id === "ash" ? "end_ash" : ending.id === "leave" ? "end_leave" : "end_truth");
+    openModal(head(I18N.t("endings")) + '<div class="end-title">' + esc(I18N.pick(ending.title)) + '</div><div class="m-body">' + esc(I18N.pick(ending.text)).replace(/\n/g, "<br>") + '</div><div class="m-actions"><button class="btn primary" id="end-ok">\u2302 ' + I18N.t("mainMenu") + "</button></div>");
+    el("end-ok").onclick = function() {
+      closeModal();
+      if (onDone) onDone();
+      Main.toMenu();
+    };
   }
-
-  /* ---------------- puzzle UIs ---------------- */
   var PZ = {};
   var pzState = {};
-
-  PZ.keypad = function (card, spec, hooks) {
-    var st = pzState; st.code = '';
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<div class="kp-display" id="kp-d">····</div>' +
-      '<div class="kp-grid">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '✓'].map(function (k) {
-        return '<button data-k="' + k + '">' + k + '</button>';
-      }).join('') + '</div>');
-    var d = card.querySelector('#kp-d');
-    function upd() { d.textContent = st.code ? I18N.faDigits(st.code) : '····'; }
-    card.querySelectorAll('.kp-grid button').forEach(function (b) {
-      b.onclick = function () {
+  PZ.keypad = function(card, spec, hooks) {
+    var st = pzState;
+    st.code = "";
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><div class="kp-display" id="kp-d">\xB7\xB7\xB7\xB7</div><div class="kp-grid">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "\u2713"].map(function(k) {
+        return '<button data-k="' + k + '">' + k + "</button>";
+      }).join("") + "</div>"
+    );
+    var d = card.querySelector("#kp-d");
+    function upd() {
+      d.textContent = st.code ? I18N.faDigits(st.code) : "\xB7\xB7\xB7\xB7";
+    }
+    card.querySelectorAll(".kp-grid button").forEach(function(b) {
+      b.onclick = function() {
         var k = b.dataset.k;
         AudioSys.SFX.tap();
-        if (k === 'C') { st.code = ''; upd(); return; }
-        if (k === '✓') { hooks.submit(st.code); return; }
-        if (st.code.length < 8) { st.code += k; upd(); }
+        if (k === "C") {
+          st.code = "";
+          upd();
+          return;
+        }
+        if (k === "\u2713") {
+          hooks.submit(st.code);
+          return;
+        }
+        if (st.code.length < 8) {
+          st.code += k;
+          upd();
+        }
       };
     });
     upd();
   };
-  PZ.wire = function (card, spec, hooks) {
-    var colors = spec.colors; // array of {id,hex,icon}
-    var left = colors.map(function (c, i) { return i; });
-    var shuffled = colors.map(function (c, i) { return i; }).sort(function () { return Math.random() - 0.5; });
-    pzState.sel = null; pzState.conn = {};
-    var rows = left.map(function (li) {
-      return '<div class="wire-row" data-l="' + li + '">' +
-        '<div class="wire-node" data-side="l" data-i="' + li + '" style="border-color:' + colors[li].hex + '">' + colors[li].icon + '</div>' +
-        '<svg class="wire-svg"><line x1="0" y1="17" x2="100%" y2="17" stroke="' + colors[li].hex + '" stroke-width="4" stroke-dasharray="6 6" opacity="0.2"/></svg>' +
-        '<div class="wire-node" data-side="r" data-i="' + shuffled[li] + '" style="border-color:#333">' + '⬛' + '</div>' +
-        '</div>';
-    }).join('');
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('wirePick')) + '</p>' + rows);
-    // right nodes show hidden colors — tap left then its matching right
+  PZ.wire = function(card, spec, hooks) {
+    var colors = spec.colors;
+    var left = colors.map(function(c, i) {
+      return i;
+    });
+    var shuffled = colors.map(function(c, i) {
+      return i;
+    }).sort(function() {
+      return Math.random() - 0.5;
+    });
+    pzState.sel = null;
+    pzState.conn = {};
+    var rows = left.map(function(li) {
+      return '<div class="wire-row" data-l="' + li + '"><div class="wire-node" data-side="l" data-i="' + li + '" style="border-color:' + colors[li].hex + '">' + colors[li].icon + '</div><svg class="wire-svg"><line x1="0" y1="17" x2="100%" y2="17" stroke="' + colors[li].hex + '" stroke-width="4" stroke-dasharray="6 6" opacity="0.2"/></svg><div class="wire-node" data-side="r" data-i="' + shuffled[li] + '" style="border-color:#333">\u2B1B</div></div>';
+    }).join("");
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("wirePick")) + "</p>" + rows
+    );
     var rNodes = card.querySelectorAll('.wire-node[data-side="r"]');
-    rNodes.forEach(function (n, idx) { n.textContent = '❓'; n.dataset.color = shuffled[idx]; });
-    card.querySelectorAll('.wire-node[data-side="l"]').forEach(function (n) {
-      n.onclick = function () {
-        card.querySelectorAll('.wire-node').forEach(function (x) { x.classList.remove('sel'); });
-        n.classList.add('sel');
+    rNodes.forEach(function(n, idx) {
+      n.textContent = "\u2753";
+      n.dataset.color = shuffled[idx];
+    });
+    card.querySelectorAll('.wire-node[data-side="l"]').forEach(function(n) {
+      n.onclick = function() {
+        card.querySelectorAll(".wire-node").forEach(function(x) {
+          x.classList.remove("sel");
+        });
+        n.classList.add("sel");
         pzState.sel = +n.dataset.i;
         AudioSys.SFX.tap();
       };
     });
-    rNodes.forEach(function (n) {
-      n.onclick = function () {
+    rNodes.forEach(function(n) {
+      n.onclick = function() {
         if (pzState.sel == null) return;
         var li = +n.dataset.color;
         if (li === pzState.sel) {
           n.textContent = colors[li].icon;
           n.style.borderColor = colors[li].hex;
-          n.classList.add('sel');
+          n.classList.add("sel");
           pzState.conn[li] = true;
           AudioSys.SFX.tap();
-          if (Object.keys(pzState.conn).length === colors.length) setTimeout(function () { hooks.submit('all'); }, 350);
+          if (Object.keys(pzState.conn).length === colors.length) setTimeout(function() {
+            hooks.submit("all");
+          }, 350);
         } else {
-          n.style.borderColor = '#c0392b';
+          n.style.borderColor = "#c0392b";
           AudioSys.SFX.fail();
-          setTimeout(function () { n.style.borderColor = '#333'; }, 500);
+          setTimeout(function() {
+            n.style.borderColor = "#333";
+          }, 500);
         }
         pzState.sel = null;
       };
     });
   };
-  PZ.clock = function (card, spec, hooks) {
-    pzState.h = 12; pzState.m = 0;
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<div class="clock-face" id="cf">' +
-      '<div class="clock-hand ch-h" id="hh"></div><div class="clock-hand ch-m" id="mh"></div></div>' +
-      '<div class="clock-btns"><button id="ch-h"></button><button id="ch-m"></button>' +
-      '<button id="ch-ok" class="primary">✓</button></div>');
-    // persian labels
-    card.querySelector('#ch-h').textContent = I18N.pick({ fa: 'ساعت +۱', en: 'Hour +1' });
-    card.querySelector('#ch-m').textContent = I18N.pick({ fa: 'دقیقه +۵', en: 'Min +5' });
-    card.querySelector('#ch-ok').textContent = '✓';
+  PZ.clock = function(card, spec, hooks) {
+    pzState.h = 12;
+    pzState.m = 0;
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><div class="clock-face" id="cf"><div class="clock-hand ch-h" id="hh"></div><div class="clock-hand ch-m" id="mh"></div></div><div class="clock-btns"><button id="ch-h"></button><button id="ch-m"></button><button id="ch-ok" class="primary">\u2713</button></div>'
+    );
+    card.querySelector("#ch-h").textContent = I18N.pick({ fa: "\u0633\u0627\u0639\u062A +\u06F1", en: "Hour +1" });
+    card.querySelector("#ch-m").textContent = I18N.pick({ fa: "\u062F\u0642\u06CC\u0642\u0647 +\u06F5", en: "Min +5" });
+    card.querySelector("#ch-ok").textContent = "\u2713";
     function upd() {
-      var ha = ((pzState.h % 12) + pzState.m / 60) / 12 * Math.PI * 2;
+      var ha = (pzState.h % 12 + pzState.m / 60) / 12 * Math.PI * 2;
       var ma = pzState.m / 60 * Math.PI * 2;
-      card.querySelector('#hh').style.transform = 'rotate(' + (ha * 180 / Math.PI) + 'deg)';
-      card.querySelector('#mh').style.transform = 'rotate(' + (ma * 180 / Math.PI) + 'deg)';
+      card.querySelector("#hh").style.transform = "rotate(" + ha * 180 / Math.PI + "deg)";
+      card.querySelector("#mh").style.transform = "rotate(" + ma * 180 / Math.PI + "deg)";
     }
-    card.querySelector('#ch-h').onclick = function () { pzState.h = pzState.h % 12 + 1; AudioSys.SFX.clockTick(); upd(); };
-    card.querySelector('#ch-m').onclick = function () { pzState.m = (pzState.m + 5) % 60; AudioSys.SFX.clockTick(); upd(); };
-    card.querySelector('#ch-ok').onclick = function () { hooks.submit(pzState.h + ':' + pzState.m); };
+    card.querySelector("#ch-h").onclick = function() {
+      pzState.h = pzState.h % 12 + 1;
+      AudioSys.SFX.clockTick();
+      upd();
+    };
+    card.querySelector("#ch-m").onclick = function() {
+      pzState.m = (pzState.m + 5) % 60;
+      AudioSys.SFX.clockTick();
+      upd();
+    };
+    card.querySelector("#ch-ok").onclick = function() {
+      hooks.submit(pzState.h + ":" + pzState.m);
+    };
     upd();
   };
-  PZ.levers = function (card, spec, hooks) {
+  PZ.levers = function(card, spec, hooks) {
     pzState.st = spec.count ? new Array(spec.count).fill(false) : [false, false, false, false, false];
     var n = pzState.st.length;
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('leverHint')) + '</p>' +
-      '<div class="lev-row">' + pzState.st.map(function (_, i) {
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("leverHint")) + '</p><div class="lev-row">' + pzState.st.map(function(_, i) {
         return '<div class="lev off" data-i="' + i + '"><i></i></div>';
-      }).join('') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="lv-ok">' + I18N.t('submit') + '</button></div>');
-    card.querySelectorAll('.lev').forEach(function (l) {
-      l.onclick = function () {
+      }).join("") + '</div><div class="m-actions"><button class="btn primary" id="lv-ok">' + I18N.t("submit") + "</button></div>"
+    );
+    card.querySelectorAll(".lev").forEach(function(l) {
+      l.onclick = function() {
         var i = +l.dataset.i;
         pzState.st[i] = !pzState.st[i];
-        l.classList.toggle('on'); l.classList.toggle('off');
+        l.classList.toggle("on");
+        l.classList.toggle("off");
         AudioSys.SFX.lever();
       };
     });
-    card.querySelector('#lv-ok').onclick = function () {
-      hooks.submit(pzState.st.map(function (b) { return b ? '1' : '0'; }).join(''));
+    card.querySelector("#lv-ok").onclick = function() {
+      hooks.submit(pzState.st.map(function(b) {
+        return b ? "1" : "0";
+      }).join(""));
     };
   };
-  PZ.symbols = function (card, spec, hooks) {
+  PZ.symbols = function(card, spec, hooks) {
     pzState.seq = [];
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('symHint')) + '</p>' +
-      '<div class="sym-grid">' + spec.symbols.map(function (s) {
-        return '<button class="sym" data-s="' + s.icon + '">' + s.icon + '</button>';
-      }).join('') + '</div>' +
-      '<div class="sym-seq" id="sym-seq">—</div>' +
-      '<div class="m-actions"><button class="btn" id="sym-clear">↺</button><button class="btn primary" id="sym-ok">' + I18N.t('submit') + '</button></div>');
-    function upd() { card.querySelector('#sym-seq').textContent = pzState.seq.join(' ') || '—'; }
-    card.querySelectorAll('.sym').forEach(function (b) {
-      b.onclick = function () {
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("symHint")) + '</p><div class="sym-grid">' + spec.symbols.map(function(s) {
+        return '<button class="sym" data-s="' + s.icon + '">' + s.icon + "</button>";
+      }).join("") + '</div><div class="sym-seq" id="sym-seq">\u2014</div><div class="m-actions"><button class="btn" id="sym-clear">\u21BA</button><button class="btn primary" id="sym-ok">' + I18N.t("submit") + "</button></div>"
+    );
+    function upd() {
+      card.querySelector("#sym-seq").textContent = pzState.seq.join(" ") || "\u2014";
+    }
+    card.querySelectorAll(".sym").forEach(function(b) {
+      b.onclick = function() {
         if (pzState.seq.length >= spec.symbols.length) return;
         pzState.seq.push(b.dataset.s);
-        AudioSys.SFX.tap(); upd();
+        AudioSys.SFX.tap();
+        upd();
       };
     });
-    card.querySelector('#sym-clear').onclick = function () { pzState.seq = []; upd(); };
-    card.querySelector('#sym-ok').onclick = function () { hooks.submit(pzState.seq.join(',')); };
+    card.querySelector("#sym-clear").onclick = function() {
+      pzState.seq = [];
+      upd();
+    };
+    card.querySelector("#sym-ok").onclick = function() {
+      hooks.submit(pzState.seq.join(","));
+    };
     upd();
   };
-  PZ.fuse = function (card, spec, hooks) {
+  PZ.fuse = function(card, spec, hooks) {
     pzState.fuse = null;
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('fusePick')) + '</p>' +
-      '<div class="fuse-row">' + spec.fuses.map(function (f) {
-        return '<button class="fuse ' + (f.dead ? 'dead' : '') + '" data-a="' + f.a + '"><span class="amp">' + f.a + 'A</span><span class="tiny">' + (f.dead ? '✕' : '') + '</span></button>';
-      }).join('') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="fu-ok">' + I18N.t('submit') + '</button></div>');
-    card.querySelectorAll('.fuse').forEach(function (f) {
-      f.onclick = function () {
-        if (f.classList.contains('dead')) { AudioSys.SFX.fail(); return; }
-        card.querySelectorAll('.fuse').forEach(function (x) { x.classList.remove('sel'); });
-        f.classList.add('sel');
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("fusePick")) + '</p><div class="fuse-row">' + spec.fuses.map(function(f) {
+        return '<button class="fuse ' + (f.dead ? "dead" : "") + '" data-a="' + f.a + '"><span class="amp">' + f.a + 'A</span><span class="tiny">' + (f.dead ? "\u2715" : "") + "</span></button>";
+      }).join("") + '</div><div class="m-actions"><button class="btn primary" id="fu-ok">' + I18N.t("submit") + "</button></div>"
+    );
+    card.querySelectorAll(".fuse").forEach(function(f) {
+      f.onclick = function() {
+        if (f.classList.contains("dead")) {
+          AudioSys.SFX.fail();
+          return;
+        }
+        card.querySelectorAll(".fuse").forEach(function(x) {
+          x.classList.remove("sel");
+        });
+        f.classList.add("sel");
         pzState.fuse = f.dataset.a;
         AudioSys.SFX.tap();
       };
     });
-    card.querySelector('#fu-ok').onclick = function () {
-      hooks.submit(pzState.fuse || '');
+    card.querySelector("#fu-ok").onclick = function() {
+      hooks.submit(pzState.fuse || "");
     };
   };
-  PZ.math = function (card, spec, hooks) {
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<div class="math-q">' + esc(I18N.pick(spec.question)) + '</div>' +
-      '<div class="kp-display" id="mp-d" style="margin-top:10px">····</div>' +
-      '<div class="kp-grid">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '-'].map(function (k) {
-        return '<button data-k="' + k + '">' + k + '</button>';
-      }).join('') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="mp-ok">' + I18N.t('submit') + '</button></div>');
-    pzState.code = '';
-    var d = card.querySelector('#mp-d');
-    function upd() { d.textContent = pzState.code || '····'; }
-    card.querySelectorAll('.kp-grid button').forEach(function (b) {
-      b.onclick = function () {
+  PZ.math = function(card, spec, hooks) {
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><div class="math-q">' + esc(I18N.pick(spec.question)) + '</div><div class="kp-display" id="mp-d" style="margin-top:10px">\xB7\xB7\xB7\xB7</div><div class="kp-grid">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "-"].map(function(k) {
+        return '<button data-k="' + k + '">' + k + "</button>";
+      }).join("") + '</div><div class="m-actions"><button class="btn primary" id="mp-ok">' + I18N.t("submit") + "</button></div>"
+    );
+    pzState.code = "";
+    var d = card.querySelector("#mp-d");
+    function upd() {
+      d.textContent = pzState.code || "\xB7\xB7\xB7\xB7";
+    }
+    card.querySelectorAll(".kp-grid button").forEach(function(b) {
+      b.onclick = function() {
         var k = b.dataset.k;
         AudioSys.SFX.tap();
-        if (k === 'C') { pzState.code = ''; upd(); return; }
-        if (k === '-') { if (!pzState.code) pzState.code = '-'; upd(); return; }
-        if (pzState.code.length < 8) { pzState.code += k; upd(); }
+        if (k === "C") {
+          pzState.code = "";
+          upd();
+          return;
+        }
+        if (k === "-") {
+          if (!pzState.code) pzState.code = "-";
+          upd();
+          return;
+        }
+        if (pzState.code.length < 8) {
+          pzState.code += k;
+          upd();
+        }
       };
     });
-    card.querySelector('#mp-ok').onclick = function () { hooks.submit(pzState.code); };
+    card.querySelector("#mp-ok").onclick = function() {
+      hooks.submit(pzState.code);
+    };
     upd();
   };
-  PZ.valve = function (card, spec, hooks) {
+  PZ.valve = function(card, spec, hooks) {
     pzState.v = spec.start.slice();
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('valveHint')) + '</p>' +
-      '<div class="valve-row">' + pzState.v.map(function (_, i) {
-        return '<div class="valve" data-i="' + i + '"><div class="g">✋</div><b id="vv-' + i + '">' + pzState.v[i] + '</b>' +
-          '<div class="vbtns"><button data-d="1">+</button><button data-d="-1">−</button></div></div>';
-      }).join('') + '</div>' +
-      '<div class="m-actions"><button class="btn primary" id="vv-ok">' + I18N.t('submit') + '</button></div>');
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("valveHint")) + '</p><div class="valve-row">' + pzState.v.map(function(_, i) {
+        return '<div class="valve" data-i="' + i + '"><div class="g">\u270B</div><b id="vv-' + i + '">' + pzState.v[i] + '</b><div class="vbtns"><button data-d="1">+</button><button data-d="-1">\u2212</button></div></div>';
+      }).join("") + '</div><div class="m-actions"><button class="btn primary" id="vv-ok">' + I18N.t("submit") + "</button></div>"
+    );
     function upd() {
-      pzState.v.forEach(function (v, i) {
-        var n = card.querySelector('#vv-' + i);
+      pzState.v.forEach(function(v, i) {
+        var n = card.querySelector("#vv-" + i);
         if (n) n.textContent = v;
       });
     }
-    card.querySelectorAll('.vbtns button').forEach(function (b) {
-      b.onclick = function () {
-        var i = +b.closest('.valve').dataset.i;
+    card.querySelectorAll(".vbtns button").forEach(function(b) {
+      b.onclick = function() {
+        var i = +b.closest(".valve").dataset.i;
         var d = +b.dataset.d;
         pzState.v[i] = Math.max(0, Math.min(9, pzState.v[i] + d));
-        AudioSys.SFX.valve(); upd();
+        AudioSys.SFX.valve();
+        upd();
       };
     });
-    card.querySelector('#vv-ok').onclick = function () { hooks.submit(pzState.v.join(',')); };
+    card.querySelector("#vv-ok").onclick = function() {
+      hooks.submit(pzState.v.join(","));
+    };
     upd();
   };
-  PZ.hunt = function (card, spec, hooks) {
+  PZ.hunt = function(card, spec, hooks) {
     pzState.found = false;
-    card.insertAdjacentHTML('beforeend',
-      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div>' +
-      '<p class="tiny" style="margin:6px 0">' + esc(I18N.t('huntHint')) + '</p>' +
-      '<div class="hunt-grid">' + spec.spots.map(function (s, i) {
-        return '<button class="hunt-spot" data-i="' + i + '">' + s.icon + '</button>';
-      }).join('') + '</div>');
-    card.querySelectorAll('.hunt-spot').forEach(function (b) {
-      b.onclick = function () {
-        if (b.classList.contains('open')) return;
+    card.insertAdjacentHTML(
+      "beforeend",
+      '<div class="m-body dim">' + esc(I18N.pick(spec.clue)) + '</div><p class="tiny" style="margin:6px 0">' + esc(I18N.t("huntHint")) + '</p><div class="hunt-grid">' + spec.spots.map(function(s, i) {
+        return '<button class="hunt-spot" data-i="' + i + '">' + s.icon + "</button>";
+      }).join("") + "</div>"
+    );
+    card.querySelectorAll(".hunt-spot").forEach(function(b) {
+      b.onclick = function() {
+        if (b.classList.contains("open")) return;
         var i = +b.dataset.i;
         if (spec.answer === i) {
-          b.classList.add('found');
-          b.textContent = spec.foundIcon || '🔑';
+          b.classList.add("found");
+          b.textContent = spec.foundIcon || "\u{1F511}";
           AudioSys.SFX.pickup();
           pzState.found = true;
-          setTimeout(function () { hooks.submit(String(i)); }, 400);
+          setTimeout(function() {
+            hooks.submit(String(i));
+          }, 400);
         } else {
-          b.classList.add('open');
-          b.textContent = '🕸';
+          b.classList.add("open");
+          b.textContent = "\u{1F578}";
           AudioSys.SFX.nothing || AudioSys.SFX.tap();
           AudioSys.SFX.paper();
         }
       };
     });
   };
-
   function puzzleModal(spec, onSubmit) {
     var card = openModal(head(spec.title) + '<div class="pz-body" id="pz-body"></div>');
-    var body = card.querySelector('#pz-body');
+    var body = card.querySelector("#pz-body");
     var hooks = {
-      submit: function (attempt) {
-        onSubmit(attempt, function (ok) {
+      submit: function(attempt) {
+        onSubmit(attempt, function(ok) {
           if (!ok) {
             AudioSys.SFX.fail();
-            toast(I18N.t('wrongCode'));
+            toast(I18N.t("wrongCode"));
           }
         });
       }
@@ -575,15 +653,32 @@ window.UI = (function () {
     (PZ[spec.type] || PZ.keypad)(body, spec, hooks);
     return card;
   }
-
   return {
-    openModal: openModal, replaceModal: replaceModal, closeModal: closeModal, closeAll: closeAll, modalOpen: modalOpen,
-    toast: toast, head: head, paperModal: paperModal, choiceModal: choiceModal,
-    updateHUD: updateHUD, showHUD: showHUD, showMenu: showMenu, hideMenu: hideMenu,
-    showLoading: showLoading, hideLoading: hideLoading,
-    pauseMenu: pauseMenu, settingsModal: settingsModal, chaptersModal: chaptersModal, aboutModal: aboutModal,
-    bagModal: bagModal, journalModal: journalModal, hintModal: hintModal,
-    levelCompleteModal: levelCompleteModal, endingModal: endingModal,
-    puzzleModal: puzzleModal, applySettingsLive: applySettingsLive
+    openModal,
+    replaceModal,
+    closeModal,
+    closeAll,
+    modalOpen,
+    toast,
+    head,
+    paperModal,
+    choiceModal,
+    updateHUD,
+    showHUD,
+    showMenu,
+    hideMenu,
+    showLoading,
+    hideLoading,
+    pauseMenu,
+    settingsModal,
+    chaptersModal,
+    aboutModal,
+    bagModal,
+    journalModal,
+    hintModal,
+    levelCompleteModal,
+    endingModal,
+    puzzleModal,
+    applySettingsLive
   };
 })();

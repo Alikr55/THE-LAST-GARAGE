@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
     private Vibrator vib;
 
     @SuppressLint("SetJavaScriptEnabled")
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,15 +28,34 @@ public class MainActivity extends Activity {
         vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
         web = new WebView(this);
+        web.setBackgroundColor(0xFF0B0D10);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
         s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
+        // local assets only: allow fonts/audio/XHR under file:// on older WebViews
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(true);
         s.setMediaPlaybackRequiresUserGesture(false);
+        s.setLoadWithOverviewMode(true);
+        s.setUseWideViewPort(true);
+        s.setSupportZoom(false);
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        web.setWebViewClient(new WebViewClient());
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(android.webkit.WebView v, int code, String desc, String url) {
+                android.util.Log.e("TLG", "load error " + code + " " + desc + " " + url);
+            }
+        });
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
+                android.util.Log.d("TLG", m.messageLevel() + " " + m.message() + " @" + m.sourceId() + ":" + m.lineNumber());
+                return true;
+            }
+        });
         web.addJavascriptInterface(new Bridge(), "AndroidBridge");
         setContentView(web);
 

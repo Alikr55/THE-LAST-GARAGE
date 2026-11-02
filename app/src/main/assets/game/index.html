@@ -10,6 +10,34 @@
 </head>
 <body>
 <canvas id="gl"></canvas>
+<noscript><div style="position:fixed;inset:0;background:#0b0d10;color:#e8a33d;display:flex;align-items:center;justify-content:center;z-index:9999">جاوااسکریپت غیرفعال است — بازی قابل اجرا نیست</div></noscript>
+<script>
+/* visible crash overlay — always first, inline, so any failure is reported on screen */
+(function () {
+  function show(msg) {
+    try {
+      var o = document.getElementById('tlg-err');
+      if (!o) {
+        o = document.createElement('div');
+        o.id = 'tlg-err';
+        o.style.cssText = 'position:fixed;left:0;right:0;top:0;bottom:0;z-index:99999;background:rgba(8,10,12,.97);color:#ffb84d;font:13px/1.9 Tahoma,sans-serif;padding:24px 16px;overflow:auto;direction:rtl;text-align:center;';
+        o.innerHTML = '<div style="font-size:44px;margin-top:18vh">⚠️</div><b style="font-size:17px">خطا در اجرای بازی</b><br><span id="tlg-err-msg" style="color:#bbb;font-size:11.5px;direction:ltr;display:inline-block;max-width:92%;word-break:break-all"></span>';
+        document.body.appendChild(o);
+      }
+      document.getElementById('tlg-err-msg').textContent += msg + '\n';
+    } catch (e) {}
+  }
+  window.TLG_FATAL = show;
+  window.addEventListener('error', function (e) {
+    var f = e && e.filename ? String(e.filename).split('/').pop() : '';
+    show((e && e.message ? e.message : 'unknown error') + (f ? '  [' + f + ':' + (e.lineno || 0) + ']' : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason;
+    show(String(r && (r.stack || r.message) ? (r.stack || r.message) : r));
+  });
+})();
+</script>
 
 <!-- splash / main menu -->
 <div id="menu" class="screen">
@@ -26,7 +54,7 @@
       <button class="btn" id="btn-about"></button>
       <button class="btn danger" id="btn-exit" hidden></button>
     </div>
-    <div class="m-foot" id="m-foot">v1.1.0 — داستان تعاملی ترسناک</div>
+    <div class="m-foot" id="m-foot">v1.2.0 — داستان تعاملی ترسناک</div>
   </div>
 </div>
 
@@ -34,7 +62,7 @@
 <div id="loading" class="screen">
   <div class="load-inner">
     <div class="load-bar"><i id="load-fill"></i></div>
-    <div id="load-tip"></div>
+    <div id="load-tip">در حال بارگذاری…</div>
   </div>
 </div>
 
