@@ -3,6 +3,7 @@ name: Android Build (APK + AAB)
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 jobs:
